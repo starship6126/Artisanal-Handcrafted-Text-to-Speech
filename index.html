@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artisanal Handcrafted Text-to-Speech</title>
+  <style>
+    :root {
+      --paper: #e9ddc7;
+      --paper-deep: #d6c39e;
+      --wood: #7b4b2c;
+      --wood-dark: #3f2417;
+      --ink: #2b2119;
+      --muted: #6b5a49;
+      --brass: #c99734;
+      --green: #527c45;
+      --gray: #938777;
+      --red: #9d3d31;
+      --panel: rgba(255, 250, 236, 0.72);
+      --shadow: 0 14px 32px rgba(48, 28, 14, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.06) 0 12px, transparent 12px 36px),
+        linear-gradient(115deg, rgba(255,255,255,0.08), rgba(90,44,21,0.18)),
+        repeating-linear-gradient(90deg, #6e3e24 0 34px, #845332 34px 68px, #5c321e 68px 104px);
+      min-height: 100vh;
+    }
+
+    button, input, textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 1px solid rgba(48, 28, 14, 0.32);
+      background: linear-gradient(#fff4d3, #d4ad58);
+      color: var(--ink);
+      min-height: 40px;
+      padding: 0.55rem 0.8rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 2px 0 rgba(48, 28, 14, 0.28);
+    }
+
+    button:hover { filter: brightness(1.04); }
+    button:active { transform: translateY(1px); box-shadow: inset 0 1px 3px rgba(0,0,0,0.25); }
+    button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+    header {
+      padding: 2rem clamp(1rem, 4vw, 4rem) 1rem;
+      color: #fff9eb;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.35);
+    }
+
+    .brand {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.8rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 6vw, 4.6rem);
+      line-height: 0.9;
+      letter-spacing: 0;
+    }
+
+    .model {
+      border: 1px solid rgba(255,255,255,0.5);
+      padding: 0.3rem 0.55rem;
+      background: rgba(63, 36, 23, 0.55);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+    }
+
+    .tagline {
+      max-width: 980px;
+      margin: 1rem 0 0;
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+    }
+
+    main {
+      padding: 0 clamp(1rem, 4vw, 4rem) 3rem;
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: var(--shadow);
+      padding: clamp(1rem, 2.4vw, 1.5rem);
+      backdrop-filter: blur(2px);
+    }
+
+    h2 {
+      margin: 0 0 0.3rem;
+      font-size: clamp(1.45rem, 3vw, 2.1rem);
+    }
+
+    p {
+      margin: 0.4rem 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .toolbar, .sliders, .preset-row, .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    .toolbar {
+      margin: 1rem 0;
+      justify-content: space-between;
+    }
+
+    .sliders {
+      flex: 1 1 580px;
+    }
+
+    label.control {
+      display: grid;
+      gap: 0.25rem;
+      min-width: min(220px, 100%);
+      color: var(--wood-dark);
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--wood);
+    }
+
+    input[type="number"], input[type="text"], textarea {
+      width: 100%;
+      border: 1px solid rgba(48, 28, 14, 0.28);
+      background: rgba(255,255,255,0.7);
+      color: var(--ink);
+      padding: 0.7rem;
+      outline-color: var(--brass);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.45;
+      font-family: "Courier New", monospace;
+    }
+
+    .record-button {
+      min-width: 190px;
+      min-height: 64px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: linear-gradient(#d85846, #8c2e26);
+      color: #fff7e8;
+      border-color: rgba(255,255,255,0.35);
+    }
+
+    .record-button.is-recording {
+      background: linear-gradient(#ffe6a2, #c58c1f);
+      color: var(--wood-dark);
+      animation: pulse 900ms infinite;
+    }
+
+    @keyframes pulse {
+      50% { transform: scale(1.02); }
+    }
+
+    .progress {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--wood-dark);
+      min-width: 145px;
+    }
+
+    .status-line {
+      min-height: 1.4rem;
+      color: var(--wood-dark);
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 0.55rem;
+    }
+
+    .unit-card {
+      position: relative;
+      min-height: 96px;
+      border: 1px solid rgba(48, 28, 14, 0.25);
+      background: rgba(255, 248, 228, 0.78);
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+
+    .unit-card.captured {
+      background: linear-gradient(180deg, rgba(236,248,217,0.94), rgba(149,183,120,0.88));
+    }
+
+    .unit-card.missing {
+      background: linear-gradient(180deg, rgba(237,231,220,0.9), rgba(166,155,138,0.75));
+    }
+
+    .unit-card.next {
+      outline: 3px solid var(--brass);
+      outline-offset: 2px;
+    }
+
+    .unit-card.recording-one {
+      outline: 3px solid var(--red);
+      outline-offset: 2px;
+    }
+
+    .unit-preview {
+      border: 0;
+      box-shadow: none;
+      background: transparent;
+      min-height: 68px;
+      width: 100%;
+      padding: 0.45rem 0.35rem 0.2rem;
+    }
+
+    .unit {
+      display: block;
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: var(--wood-dark);
+    }
+
+    .hint {
+      display: block;
+      margin-top: 0.15rem;
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .redo {
+      width: 100%;
+      min-height: 28px;
+      padding: 0.15rem;
+      font-size: 0.72rem;
+      border-width: 1px 0 0;
+      background: rgba(255, 244, 211, 0.72);
+      box-shadow: none;
+      text-transform: uppercase;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.45fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255, 247, 226, 0.72);
+      border: 1px solid rgba(48, 28, 14, 0.22);
+      padding: 0.9rem;
+    }
+
+    .speak-button, .sing-button {
+      min-width: 160px;
+      min-height: 54px;
+      font-size: 1.05rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .sequence {
+      min-height: 78px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: start;
+      gap: 0.25rem;
+      margin-top: 0.8rem;
+      padding: 0.75rem;
+      background: rgba(64, 36, 22, 0.1);
+      border: 1px solid rgba(48, 28, 14, 0.2);
+    }
+
+    .seq-chip {
+      min-width: 30px;
+      min-height: 30px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 0.35rem;
+      border: 1px solid rgba(48, 28, 14, 0.22);
+      background: rgba(255,255,255,0.55);
+      font-family: "Courier New", monospace;
+      font-weight: 800;
+    }
+
+    .seq-chip.active {
+      background: var(--brass);
+      color: #23170e;
+      transform: translateY(-1px);
+    }
+
+    .song-sequence {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    }
+
+    .song-step {
+      min-width: 0;
+      min-height: 86px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      align-items: center;
+      padding: 0.55rem;
+    }
+
+    .song-note {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .song-lyric {
+      overflow-wrap: anywhere;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.1rem;
+      font-weight: 900;
+    }
+
+    .song-units {
+      overflow: hidden;
+      color: var(--wood);
+      font-size: 0.7rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .song-alignment {
+      min-height: 1.2rem;
+      color: var(--wood-dark);
+      font-weight: 800;
+    }
+
+    .song-alignment.invalid {
+      color: var(--red);
+    }
+
+    .missing-list {
+      min-height: 1.2rem;
+      margin-top: 0.5rem;
+      color: var(--red);
+      font-weight: 800;
+    }
+
+    details {
+      margin-top: 0.8rem;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 800;
+      color: var(--wood-dark);
+    }
+
+    .footer-note {
+      color: #fff8e6;
+      text-shadow: 0 2px 2px rgba(0,0,0,0.35);
+      padding: 0 clamp(1rem, 4vw, 4rem) 2rem;
+      max-width: 900px;
+    }
+
+    @media (max-width: 850px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .record-button, .speak-button, .sing-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>Artisanal Handcrafted Text-to-Speech</h1>
+      <span class="model">Model AH-TTS 1986</span>
+    </div>
+    <p class="tagline">Every phoneme lovingly hand-recorded. No neural networks. No shortcuts. Just craft. If it sounds like a ransom note made of audio, the machine is operating within specification.</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="recording-title">
+      <h2 id="recording-title">1. Recording Booth</h2>
+      <p>Read each chip out loud, in order, leaving a short silent gap (~0.3s) between chips. Steady rhythm. Do not rush.</p>
+      <div class="toolbar">
+        <div class="sliders">
+          <label class="control">Silence threshold <span id="thresholdValue">0.020</span>
+            <input id="threshold" type="range" min="0.005" max="0.08" step="0.001" value="0.020">
+          </label>
+          <label class="control">Minimum gap <span id="gapValue">250 ms</span>
+            <input id="minGap" type="range" min="120" max="700" step="10" value="250">
+          </label>
+        </div>
+        <div class="button-row">
+          <span class="progress" id="progress">0 / 41 captured</span>
+          <button id="exportBank" type="button">Export voice bank</button>
+          <button id="importBank" type="button">Import voice bank</button>
+          <input id="importFile" type="file" accept="application/json,.json" hidden>
+        </div>
+      </div>
+      <button id="recordButton" class="record-button" type="button">Record</button>
+      <p class="status-line" id="recordStatus">Waiting for premium human source material.</p>
+      <div id="unitGrid" class="grid" aria-label="Recording script and verification board"></div>
+    </section>
+
+    <section aria-labelledby="speech-title">
+      <h2 id="speech-title">2. Speech Mode</h2>
+      <div class="two-col">
+        <div>
+          <label class="control">Input text
+            <textarea id="speechText">this is not a neural network.   i sat in a room and said each sound out loud, one at a time.   no big model, no big tech, just a stack of hand cut sound stuck end to end.   it took four hours, it is bad, and i am not sorry.</textarea>
+          </label>
+          <div class="toolbar">
+            <button id="speakButton" class="speak-button" type="button">Speak</button>
+            <button id="stopButton" type="button">Stop</button>
+          </div>
+          <div class="missing-list" id="missingSpeech"></div>
+        </div>
+        <div class="panel">
+          <div class="sliders">
+            <label class="control">Speed <span id="speedValue">1.50x</span>
+              <input id="speed" type="range" min="0.5" max="2" step="0.05" value="1.5">
+            </label>
+            <label class="control">Pitch <span id="pitchValue">1.00x</span>
+              <input id="pitch" type="range" min="0.5" max="2" step="0.05" value="1">
+            </label>
+            <label class="control">Gap between units <span id="unitGapValue">-20 ms</span>
+              <input id="unitGap" type="range" min="-50" max="200" step="5" value="-20">
+            </label>
+          </div>
+        </div>
+      </div>
+      <div id="speechSequence" class="sequence" aria-live="polite"></div>
+    </section>
+
+    <section aria-labelledby="singing-title">
+      <h2 id="singing-title">3. Singing Mode</h2>
+      <div class="two-col">
+        <div>
+          <label class="control">Lyrics (hyphenated syllables)
+            <textarea id="lyricsText">ma-ry had a lit-tle lamb
+lit-tle lamb lit-tle lamb
+ma-ry had a lit-tle lamb
+its fleece was white as snow</textarea>
+          </label>
+          <label class="control">Melody notes
+            <textarea id="melodyText">E4:0.4 D4:0.4 C4:0.4 D4:0.4 E4:0.4 E4:0.4 E4:0.8
+D4:0.4 D4:0.4 D4:0.8 E4:0.4 G4:0.4 G4:0.8
+E4:0.4 D4:0.4 C4:0.4 D4:0.4 E4:0.4 E4:0.4 E4:0.6
+E4:0.2 D4:0.4 D4:0.4 E4:0.4 D4:0.4 C4:0.8</textarea>
+          </label>
+          <div class="preset-row" aria-label="Preset melodies">
+            <button type="button" data-preset="mary">Mary Had a Little Lamb</button>
+            <button type="button" data-preset="birthday">Happy Birthday</button>
+            <button type="button" data-preset="twinkle">Twinkle Twinkle</button>
+          </div>
+          <div class="toolbar">
+            <button id="singButton" class="sing-button" type="button">Sing</button>
+            <button id="stopSingButton" type="button">Stop</button>
+          </div>
+          <div class="missing-list" id="missingSinging"></div>
+          <div class="song-alignment" id="songAlignment" aria-live="polite"></div>
+        </div>
+        <div class="panel">
+          <label class="control">Speed <span id="singSpeedValue">1.00x</span>
+            <input id="singSpeed" type="range" min="0.5" max="2" step="0.05" value="1">
+          </label>
+          <p>Melody tokens look like <strong>C4</strong> or <strong>G4:0.8</strong>. The suffix is seconds.</p>
+          <details>
+            <summary>Advanced calibration hatch</summary>
+            <label class="control">Reference frequency <span id="referenceValue">220 Hz</span>
+              <input id="referenceFreq" type="range" min="120" max="360" step="1" value="220">
+            </label>
+          </details>
+        </div>
+      </div>
+      <div id="singSequence" class="sequence song-sequence" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <p class="footer-note">Chrome may require this to be served from localhost before the mic wakes up. If opening the file directly blocks recording, run a tiny local server and visit the localhost URL.</p>
+
+  <script>
+    /* Inventory and UI setup */
+    const DIGRAPHS = ["th", "sh", "ch", "ph", "wh", "ng", "oo", "ee", "ou", "ai", "ay", "ea", "er", "ar", "or", "qu"];
+    const LETTERS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+    const UNITS = [...DIGRAPHS, ...LETTERS];
+    const HINTS = {
+      th: "th as in THE", sh: "sh as in SHH", ch: "ch as in CHIP", ph: "ph as in PHONE",
+      wh: "wh as in WHAT", ng: "ng as in SING", oo: "oo as in BOOT", ee: "ee as in BEEP",
+      ou: "ou as in LOUD", ai: "ai as in PAIN", ay: "ay as in SAY", ea: "ea as in BEAN",
+      er: "er as in HER", ar: "ar as in CAR", or: "or as in FOR", qu: "qu as in QUACK",
+      a: "a as in CAT", b: "say BUH", c: "say KUH", d: "say DUH", e: "e as in BED",
+      f: "say FUH", g: "say GUH", h: "say HUH", i: "i as in BIT", j: "say JUH",
+      k: "say KUH", l: "say LUH", m: "say MUH", n: "say NUH", o: "o as in HOT",
+      p: "say PUH", r: "say RUH", s: "say SUH", t: "say TUH", u: "u as in CUT",
+      v: "say VUH", w: "say WUH", x: "say XUH", y: "say YUH", z: "say ZUH"
+    };
+    const PRESETS = {
+      mary: {
+        lyrics: "ma-ry had a lit-tle lamb\nlit-tle lamb lit-tle lamb\nma-ry had a lit-tle lamb\nits fleece was white as snow",
+        melody: "E4:0.4 D4:0.4 C4:0.4 D4:0.4 E4:0.4 E4:0.4 E4:0.8 D4:0.4 D4:0.4 D4:0.8 E4:0.4 G4:0.4 G4:0.8 E4:0.4 D4:0.4 C4:0.4 D4:0.4 E4:0.4 E4:0.4 E4:0.6 E4:0.2 D4:0.4 D4:0.4 E4:0.4 D4:0.4 C4:0.8"
+      },
+      birthday: {
+        lyrics: "hap-py birth-day to you\nhap-py birth-day to you\nhap-py birth-day dear old friend\nhap-py birth-day to you",
+        melody: "G4:0.35 G4:0.35 A4:0.7 G4:0.7 C5:0.7 B4:1\nG4:0.35 G4:0.35 A4:0.7 G4:0.7 D5:0.7 C5:1\nG4:0.35 G4:0.35 G5:0.7 E5:0.7 C5:0.7 B4:0.7 A4:1\nF5:0.35 F5:0.35 E5:0.7 C5:0.7 D5:0.7 C5:1"
+      },
+      twinkle: {
+        lyrics: "twin-kle twin-kle lit-tle star\nhow i won-der what you are\nup a-bove the world so high\nlike a dia-mond in the sky\ntwin-kle twin-kle lit-tle star\nhow i won-der what you are",
+        melody: "C4:0.4 C4:0.4 G4:0.4 G4:0.4 A4:0.4 A4:0.4 G4:0.8\nF4:0.4 F4:0.4 E4:0.4 E4:0.4 D4:0.4 D4:0.4 C4:0.8\nG4:0.4 G4:0.4 F4:0.4 F4:0.4 E4:0.4 E4:0.4 D4:0.8\nG4:0.4 G4:0.4 F4:0.4 F4:0.4 E4:0.4 E4:0.4 D4:0.8\nC4:0.4 C4:0.4 G4:0.4 G4:0.4 A4:0.4 A4:0.4 G4:0.8\nF4:0.4 F4:0.4 E4:0.4 E4:0.4 D4:0.4 D4:0.4 C4:0.8"
+      }
+    };
+
+    const els = {
+      grid: document.getElementById("unitGrid"),
+      threshold: document.getElementById("threshold"),
+      thresholdValue: document.getElementById("thresholdValue"),
+      minGap: document.getElementById("minGap"),
+      gapValue: document.getElementById("gapValue"),
+      recordButton: document.getElementById("recordButton"),
+      recordStatus: document.getElementById("recordStatus"),
+      progress: document.getElementById("progress"),
+      exportBank: document.getElementById("exportBank"),
+      importBank: document.getElementById("importBank"),
+      importFile: document.getElementById("importFile"),
+      speechText: document.getElementById("speechText"),
+      speakButton: document.getElementById("speakButton"),
+      stopButton: document.getElementById("stopButton"),
+      speed: document.getElementById("speed"),
+      speedValue: document.getElementById("speedValue"),
+      pitch: document.getElementById("pitch"),
+      pitchValue: document.getElementById("pitchValue"),
+      unitGap: document.getElementById("unitGap"),
+      unitGapValue: document.getElementById("unitGapValue"),
+      speechSequence: document.getElementById("speechSequence"),
+      missingSpeech: document.getElementById("missingSpeech"),
+      lyricsText: document.getElementById("lyricsText"),
+      melodyText: document.getElementById("melodyText"),
+      singButton: document.getElementById("singButton"),
+      stopSingButton: document.getElementById("stopSingButton"),
+      singSequence: document.getElementById("singSequence"),
+      missingSinging: document.getElementById("missingSinging"),
+      songAlignment: document.getElementById("songAlignment"),
+      singSpeed: document.getElementById("singSpeed"),
+      singSpeedValue: document.getElementById("singSpeedValue"),
+      referenceFreq: document.getElementById("referenceFreq"),
+      referenceValue: document.getElementById("referenceValue")
+    };
+
+    let audioCtx;
+    let bank = {};
+    let activeSources = [];
+    let highlightTimers = [];
+    let dbPromise;
+    let persistTimer;
+    let capture = null;
+    let rerecord = null;
+
+    function renderGrid() {
+      els.grid.innerHTML = "";
+      UNITS.forEach((unit) => {
+        const card = document.createElement("div");
+        card.className = "unit-card";
+        card.dataset.unit = unit;
+
+        const preview = document.createElement("button");
+        preview.type = "button";
+        preview.className = "unit-preview";
+        preview.title = "Preview " + unit;
+        preview.innerHTML = `<span class="unit">${unit}</span><span class="hint">${HINTS[unit]}</span>`;
+        preview.addEventListener("click", () => previewUnit(unit));
+
+        const redo = document.createElement("button");
+        redo.type = "button";
+        redo.className = "redo";
+        redo.textContent = "hold to re-record";
+        redo.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          redo.setPointerCapture(event.pointerId);
+          startRerecord(unit);
+        });
+        redo.addEventListener("pointerup", () => stopRerecord());
+        redo.addEventListener("pointercancel", () => stopRerecord());
+        redo.addEventListener("lostpointercapture", () => stopRerecord());
+
+        card.append(preview, redo);
+        els.grid.appendChild(card);
+      });
+      refreshGrid();
+    }
+
+    function refreshGrid(nextIndex = -1) {
+      const captured = UNITS.filter((unit) => bank[unit]?.buffer).length;
+      els.progress.textContent = `${captured} / ${UNITS.length} captured`;
+      document.querySelectorAll(".unit-card").forEach((card) => {
+        const unit = card.dataset.unit;
+        const index = UNITS.indexOf(unit);
+        card.classList.toggle("captured", Boolean(bank[unit]?.buffer));
+        card.classList.toggle("missing", !bank[unit]?.buffer);
+        card.classList.toggle("next", index === nextIndex);
+      });
+      updateMissingDisplays();
+    }
+
+    function updateSliderLabels() {
+      els.thresholdValue.textContent = Number(els.threshold.value).toFixed(3);
+      els.gapValue.textContent = `${els.minGap.value} ms`;
+      els.speedValue.textContent = `${Number(els.speed.value).toFixed(2)}x`;
+      els.pitchValue.textContent = `${Number(els.pitch.value).toFixed(2)}x`;
+      els.unitGapValue.textContent = `${els.unitGap.value} ms`;
+      els.singSpeedValue.textContent = `${Number(els.singSpeed.value).toFixed(2)}x`;
+      els.referenceValue.textContent = `${els.referenceFreq.value} Hz`;
+    }
+
+    [els.threshold, els.minGap, els.speed, els.pitch, els.unitGap, els.singSpeed, els.referenceFreq].forEach((input) => {
+      input.addEventListener("input", updateSliderLabels);
+    });
+
+    /* IndexedDB persistence and voice bank import/export */
+    function openDB() {
+      if (dbPromise) return dbPromise;
+      dbPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open("artisanal-handcrafted-tts", 1);
+        request.onupgradeneeded = () => request.result.createObjectStore("voicebanks", { keyPath: "id" });
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      return dbPromise;
+    }
+
+    async function persistBank() {
+      const db = await openDB();
+      const tx = db.transaction("voicebanks", "readwrite");
+      tx.objectStore("voicebanks").put({
+        id: "default",
+        app: "Artisanal Handcrafted Text-to-Speech",
+        version: 1,
+        savedAt: new Date().toISOString(),
+        units: exportableUnits()
+      });
+      await txDone(tx);
+    }
+
+    function queuePersist() {
+      clearTimeout(persistTimer);
+      persistTimer = setTimeout(() => persistBank().catch(console.error), 500);
+    }
+
+    async function loadBank() {
+      const db = await openDB();
+      const tx = db.transaction("voicebanks", "readonly");
+      const request = tx.objectStore("voicebanks").get("default");
+      const saved = await requestDone(request);
+      await txDone(tx);
+      if (!saved?.units) return;
+      await importUnits(saved.units);
+      els.recordStatus.textContent = "Loaded the preserved voice bank from this machine.";
+    }
+
+    function txDone(tx) {
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+    }
+
+    function requestDone(request) {
+      return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function exportableUnits() {
+      const units = {};
+      UNITS.forEach((unit) => {
+        if (bank[unit]?.wavBase64) {
+          units[unit] = {
+            sampleRate: bank[unit].sampleRate,
+            wavBase64: bank[unit].wavBase64,
+            updatedAt: bank[unit].updatedAt
+          };
+        }
+      });
+      return units;
+    }
+
+    async function importUnits(units) {
+      await ensureAudioContext();
+      const next = {};
+      for (const unit of UNITS) {
+        const record = units[unit];
+        if (!record?.wavBase64) continue;
+        const buffer = await decodeWavBase64(record.wavBase64);
+        next[unit] = {
+          buffer,
+          sampleRate: record.sampleRate || buffer.sampleRate,
+          wavBase64: record.wavBase64,
+          updatedAt: record.updatedAt || new Date().toISOString()
+        };
+      }
+      bank = { ...bank, ...next };
+      refreshGrid();
+    }
+
+    els.exportBank.addEventListener("click", () => {
+      const payload = {
+        app: "Artisanal Handcrafted Text-to-Speech",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        inventory: UNITS,
+        units: exportableUnits()
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "artisanal-voice-bank.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    els.importBank.addEventListener("click", () => els.importFile.click());
+    els.importFile.addEventListener("change", async () => {
+      const file = els.importFile.files[0];
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        await importUnits(parsed.units || {});
+        await persistBank();
+        els.recordStatus.textContent = "Imported voice bank and placed it in the vault.";
+      } catch (error) {
+        els.recordStatus.textContent = "Import failed. The voice bank paperwork was not in order.";
+        console.error(error);
+      } finally {
+        els.importFile.value = "";
+      }
+    });
+
+    /* Audio helpers */
+    async function ensureAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") await audioCtx.resume();
+      return audioCtx;
+    }
+
+    function getRms(float32) {
+      let sum = 0;
+      for (let i = 0; i < float32.length; i++) sum += float32[i] * float32[i];
+      return Math.sqrt(sum / Math.max(1, float32.length));
+    }
+
+    function concatChunks(chunks) {
+      const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+      const merged = new Float32Array(length);
+      let offset = 0;
+      chunks.forEach((chunk) => {
+        merged.set(chunk, offset);
+        offset += chunk.length;
+      });
+      return merged;
+    }
+
+    function trimSilence(samples, sampleRate, threshold = 0.02) {
+      const windowSize = Math.max(64, Math.floor(sampleRate * 0.05));
+      let start = 0;
+      let end = samples.length;
+      for (let i = 0; i < samples.length; i += windowSize) {
+        if (getRms(samples.subarray(i, Math.min(samples.length, i + windowSize))) > threshold) {
+          start = Math.max(0, i - windowSize);
+          break;
+        }
+      }
+      for (let i = samples.length - windowSize; i > 0; i -= windowSize) {
+        if (getRms(samples.subarray(Math.max(0, i), Math.min(samples.length, i + windowSize))) > threshold) {
+          end = Math.min(samples.length, i + windowSize * 2);
+          break;
+        }
+      }
+      if (end <= start) return samples;
+      return samples.slice(start, end);
+    }
+
+    function makeBuffer(samples, sampleRate) {
+      const buffer = audioCtx.createBuffer(1, samples.length, sampleRate);
+      buffer.copyToChannel(samples, 0);
+      return buffer;
+    }
+
+    function floatToWavBase64(samples, sampleRate) {
+      const bytesPerSample = 2;
+      const dataSize = samples.length * bytesPerSample;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+      writeAscii(view, 0, "RIFF");
+      view.setUint32(4, 36 + dataSize, true);
+      writeAscii(view, 8, "WAVE");
+      writeAscii(view, 12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * bytesPerSample, true);
+      view.setUint16(32, bytesPerSample, true);
+      view.setUint16(34, 16, true);
+      writeAscii(view, 36, "data");
+      view.setUint32(40, dataSize, true);
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++, offset += 2) {
+        const sample = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+      }
+      let binary = "";
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      return btoa(binary);
+    }
+
+    function writeAscii(view, offset, text) {
+      for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
+    }
+
+    async function decodeWavBase64(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return audioCtx.decodeAudioData(bytes.buffer);
+    }
+
+    function commitSamples(unit, samples, sampleRate) {
+      if (!samples.length) return;
+      const threshold = Number(els.threshold.value);
+      const trimmed = trimSilence(samples, sampleRate, threshold);
+      const buffer = makeBuffer(trimmed, sampleRate);
+      bank[unit] = {
+        buffer,
+        sampleRate,
+        wavBase64: floatToWavBase64(trimmed, sampleRate),
+        updatedAt: new Date().toISOString()
+      };
+      queuePersist();
+    }
+
+    function stopEverySound() {
+      activeSources.forEach((source) => {
+        try { source.stop(); } catch (error) {}
+      });
+      activeSources = [];
+      highlightTimers.forEach(clearTimeout);
+      highlightTimers = [];
+      document.querySelectorAll(".seq-chip.active").forEach((chip) => chip.classList.remove("active"));
+    }
+
+    function scheduleHighlight(container, index, startTime, duration) {
+      const delay = Math.max(0, (startTime - audioCtx.currentTime) * 1000);
+      highlightTimers.push(setTimeout(() => {
+        container.querySelectorAll(".seq-chip.active").forEach((chip) => chip.classList.remove("active"));
+        const chip = container.querySelector(`[data-seq-index="${index}"]`);
+        if (chip) chip.classList.add("active");
+      }, delay));
+      highlightTimers.push(setTimeout(() => {
+        const chip = container.querySelector(`[data-seq-index="${index}"]`);
+        if (chip) chip.classList.remove("active");
+      }, delay + Math.max(30, duration * 1000)));
+    }
+
+    function scheduleBeep(startTime, duration = 0.09, frequency = 330) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "square";
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.02);
+      activeSources.push(osc);
+    }
+
+    function scheduleTimeStretchedBuffer(buffer, startTime, speed, pitch) {
+      const grainDuration = 0.06;
+      const outputHop = grainDuration / 3;
+      const outputDuration = buffer.duration / speed;
+
+      for (let outputOffset = 0; outputOffset < outputDuration; outputOffset += outputHop) {
+        const inputOffset = outputOffset * speed;
+        const availableInput = buffer.duration - inputOffset;
+        if (availableInput <= 0) break;
+
+        const inputDuration = Math.min(grainDuration * pitch, availableInput);
+        const audibleDuration = inputDuration / pitch;
+        const source = audioCtx.createBufferSource();
+        const gain = audioCtx.createGain();
+        const grainStart = startTime + outputOffset;
+        const grainEnd = grainStart + audibleDuration;
+        const fadeDuration = Math.min(outputHop, audibleDuration / 2);
+
+        source.buffer = buffer;
+        source.playbackRate.value = pitch;
+        gain.gain.setValueAtTime(0.0001, grainStart);
+        gain.gain.linearRampToValueAtTime(0.55, grainStart + fadeDuration);
+        gain.gain.setValueAtTime(0.55, Math.max(grainStart + fadeDuration, grainEnd - fadeDuration));
+        gain.gain.linearRampToValueAtTime(0.0001, grainEnd);
+        source.connect(gain).connect(audioCtx.destination);
+        source.start(grainStart, inputOffset, inputDuration);
+        activeSources.push(source);
+      }
+
+      return outputDuration;
+    }
+
+    async function previewUnit(unit) {
+      await ensureAudioContext();
+      const record = bank[unit];
+      stopEverySound();
+      if (!record?.buffer) {
+        scheduleBeep(audioCtx.currentTime + 0.03, 0.12, 220);
+        return;
+      }
+      const source = audioCtx.createBufferSource();
+      source.buffer = record.buffer;
+      source.connect(audioCtx.destination);
+      source.start();
+      activeSources.push(source);
+    }
+
+    /* Recording booth: single-take silence splitting and per-chip repair */
+    async function startCapture() {
+      await ensureAudioContext();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      const source = audioCtx.createMediaStreamSource(stream);
+      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      const startIndex = firstMissingIndex();
+      capture = {
+        stream,
+        source,
+        processor,
+        sampleRate: audioCtx.sampleRate,
+        nextIndex: startIndex === -1 ? 0 : startIndex,
+        chunks: [],
+        inVoice: false,
+        silenceFrames: 0
+      };
+      processor.onaudioprocess = (event) => processCaptureBuffer(event.inputBuffer.getChannelData(0));
+      source.connect(processor);
+      processor.connect(audioCtx.destination);
+      els.recordButton.textContent = "Stop";
+      els.recordButton.classList.add("is-recording");
+      els.recordStatus.textContent = `Recording from [${UNITS[capture.nextIndex]}]. Leave visible gaps.`;
+      refreshGrid(capture.nextIndex);
+    }
+
+    function processCaptureBuffer(input) {
+      if (!capture) return;
+      const chunk = new Float32Array(input);
+      const rms = getRms(chunk);
+      const threshold = Number(els.threshold.value);
+      const minGapFrames = Math.floor(audioCtx.sampleRate * Number(els.minGap.value) / 1000);
+      if (rms >= threshold) {
+        capture.inVoice = true;
+        capture.silenceFrames = 0;
+        capture.chunks.push(chunk);
+        return;
+      }
+      if (!capture.inVoice) return;
+      capture.chunks.push(chunk);
+      capture.silenceFrames += chunk.length;
+      if (capture.silenceFrames >= minGapFrames) {
+        finishLiveSegment();
+      }
+    }
+
+    function finishLiveSegment() {
+      if (!capture || capture.nextIndex >= UNITS.length) return;
+      const samples = concatChunks(capture.chunks);
+      const unit = UNITS[capture.nextIndex];
+      commitSamples(unit, samples, capture.sampleRate);
+      capture.nextIndex += 1;
+      capture.chunks = [];
+      capture.inVoice = false;
+      capture.silenceFrames = 0;
+      const nextUnit = UNITS[capture.nextIndex];
+      els.recordStatus.textContent = nextUnit ? `Captured [${unit}]. Next: [${nextUnit}].` : "All chips captured. Stop when you are done basking.";
+      refreshGrid(capture.nextIndex);
+    }
+
+    async function stopCapture() {
+      if (!capture) return;
+      if (capture.inVoice && capture.chunks.length && capture.nextIndex < UNITS.length) finishLiveSegment();
+      capture.processor.disconnect();
+      capture.source.disconnect();
+      capture.stream.getTracks().forEach((track) => track.stop());
+      capture = null;
+      els.recordButton.textContent = "Record";
+      els.recordButton.classList.remove("is-recording");
+      refreshGrid(firstMissingIndex());
+      await persistBank().catch(console.error);
+      const missing = UNITS.length - UNITS.filter((unit) => bank[unit]?.buffer).length;
+      els.recordStatus.textContent = missing ? `${missing} chips remain gray. Press Record to resume from the first one.` : "Complete voice bank captured. It is beautifully unrefined.";
+    }
+
+    function firstMissingIndex() {
+      return UNITS.findIndex((unit) => !bank[unit]?.buffer);
+    }
+
+    els.recordButton.addEventListener("click", async () => {
+      try {
+        if (capture) await stopCapture();
+        else await startCapture();
+      } catch (error) {
+        els.recordStatus.textContent = "Mic access failed. Serve this file from localhost if the browser refuses file access.";
+        console.error(error);
+      }
+    });
+
+    async function startRerecord(unit) {
+      if (rerecord || capture) return;
+      await ensureAudioContext();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      const source = audioCtx.createMediaStreamSource(stream);
+      const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+      rerecord = { unit, stream, source, processor, chunks: [], sampleRate: audioCtx.sampleRate };
+      processor.onaudioprocess = (event) => rerecord?.chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+      source.connect(processor);
+      processor.connect(audioCtx.destination);
+      document.querySelector(`[data-unit="${unit}"]`)?.classList.add("recording-one");
+      els.recordStatus.textContent = `Repairing [${unit}]. Release when the artisanal noise is complete.`;
+    }
+
+    async function stopRerecord() {
+      if (!rerecord) return;
+      const current = rerecord;
+      rerecord = null;
+      current.processor.disconnect();
+      current.source.disconnect();
+      current.stream.getTracks().forEach((track) => track.stop());
+      const samples = concatChunks(current.chunks);
+      commitSamples(current.unit, samples, current.sampleRate);
+      document.querySelector(`[data-unit="${current.unit}"]`)?.classList.remove("recording-one");
+      refreshGrid(firstMissingIndex());
+      await persistBank().catch(console.error);
+      els.recordStatus.textContent = `Re-recorded [${current.unit}] with full boutique disregard.`;
+    }
+
+    /* Text mapping and scheduled speech playback */
+    function textToUnits(text) {
+      const cleaned = text.toLowerCase().replace(/[^a-z ]+/g, "").replace(/\s+/g, " ").trim();
+      const units = [];
+      let i = 0;
+      while (i < cleaned.length) {
+        const char = cleaned[i];
+        if (char === " ") {
+          units.push(" ");
+          i += 1;
+          continue;
+        }
+        const pair = cleaned.slice(i, i + 2);
+        if (DIGRAPHS.includes(pair)) {
+          units.push(pair);
+          i += 2;
+          continue;
+        }
+        if (LETTERS.includes(char)) units.push(char);
+        i += 1;
+      }
+      return units;
+    }
+
+    function speechPlaybackPlan(text) {
+      const words = [...text.toLowerCase().matchAll(/[a-z]+/g)];
+      const plan = [];
+      words.forEach((match, wordIndex) => {
+        const wordUnits = textToUnits(match[0]);
+        const wordRate = wordUnits.length >= 5 ? 1.4 : wordUnits.length >= 3 ? 1.2 : 1;
+        wordUnits.forEach((unit) => plan.push({ unit, wordRate }));
+
+        const wordEnd = match.index + match[0].length;
+        const nextWordStart = words[wordIndex + 1]?.index ?? text.length;
+        const separator = text.slice(wordEnd, nextWordStart);
+        if (wordIndex < words.length - 1 || separator.includes(".")) {
+          plan.push({ unit: " ", pauseDuration: separator.includes(".") ? 0.24 : 0.18 });
+        }
+      });
+      return plan;
+    }
+
+    function renderSequence(container, units, hidePauseLabel = false) {
+      container.innerHTML = "";
+      units.forEach((unit, index) => {
+        const chip = document.createElement("span");
+        chip.className = "seq-chip";
+        chip.dataset.seqIndex = index;
+        chip.textContent = unit === " " ? (hidePauseLabel ? "" : "pause") : unit;
+        if (unit === " ") chip.setAttribute("aria-label", "pause");
+        container.appendChild(chip);
+      });
+    }
+
+    function missingFor(units) {
+      return [...new Set(units.filter((unit) => unit !== " " && !bank[unit]?.buffer))];
+    }
+
+    function updateMissingDisplays() {
+      const speechUnits = speechPlaybackPlan(els.speechText.value).map(({ unit }) => unit);
+      const speechMissing = missingFor(speechUnits);
+      els.missingSpeech.textContent = speechMissing.length ? `Missing units: ${speechMissing.join(", ")}` : "";
+      const singUnits = parseSongLyrics(els.lyricsText.value).flatMap(({ units }) => units);
+      const singMissing = missingFor(singUnits);
+      els.missingSinging.textContent = singMissing.length ? `Missing units: ${singMissing.join(", ")}` : "";
+    }
+
+    async function speak() {
+      await ensureAudioContext();
+      stopEverySound();
+      const plan = speechPlaybackPlan(els.speechText.value);
+      const units = plan.map(({ unit }) => unit);
+      renderSequence(els.speechSequence, units, true);
+      updateMissingDisplays();
+      let cursor = audioCtx.currentTime + 0.08;
+      const speed = Number(els.speed.value);
+      const pitch = Number(els.pitch.value);
+      const gapSeconds = Number(els.unitGap.value) / 1000;
+      plan.forEach(({ unit, wordRate = 1, pauseDuration }, index) => {
+        const startTime = Math.max(audioCtx.currentTime + 0.03, cursor);
+        if (unit === " ") {
+          scheduleHighlight(els.speechSequence, index, startTime, pauseDuration);
+          cursor = startTime + pauseDuration + gapSeconds;
+          return;
+        }
+        const unitSpeed = speed * wordRate;
+        const record = bank[unit];
+        if (!record?.buffer) {
+          const duration = 0.09 / wordRate;
+          scheduleBeep(startTime, duration, 260);
+          scheduleHighlight(els.speechSequence, index, startTime, duration);
+          cursor = startTime + duration + gapSeconds;
+          return;
+        }
+        const duration = scheduleTimeStretchedBuffer(record.buffer, startTime, unitSpeed, pitch);
+        scheduleHighlight(els.speechSequence, index, startTime, duration);
+        cursor = startTime + duration + gapSeconds;
+      });
+    }
+
+    els.speakButton.addEventListener("click", () => speak().catch(console.error));
+    els.stopButton.addEventListener("click", stopEverySound);
+    els.speechText.addEventListener("input", () => {
+      renderSequence(els.speechSequence, speechPlaybackPlan(els.speechText.value).map(({ unit }) => unit), true);
+      updateMissingDisplays();
+    });
+
+    /* Singing mode: note parsing, chipmunk rates, raw looping */
+    function parseMelody(text) {
+      return text.trim().split(/\s+/).map(parseNote).filter(Boolean);
+    }
+
+    function parseSongLyrics(text) {
+      return text.toLowerCase().trim().split(/\s+/).flatMap((word) => word.split("-")).map((part) => {
+        const lyric = part.replace(/[^a-z]/g, "");
+        return { lyric, units: textToUnits(lyric) };
+      }).filter((syllable) => syllable.units.length);
+    }
+
+    function parseNote(token) {
+      const match = token.match(/^([A-Ga-g])([#b]?)(-?\d)(?::([0-9]*\.?[0-9]+))?$/);
+      if (!match) return null;
+      const [, letter, accidental, octaveText, durationText] = match;
+      const semitones = { C: -9, D: -7, E: -5, F: -4, G: -2, A: 0, B: 2 };
+      let offset = semitones[letter.toUpperCase()];
+      if (accidental === "#") offset += 1;
+      if (accidental === "b") offset -= 1;
+      const octave = Number(octaveText);
+      const midiOffset = offset + (octave - 4) * 12;
+      const duration = Number(durationText || 0.4);
+      if (duration <= 0) return null;
+      return {
+        token,
+        frequency: 440 * Math.pow(2, midiOffset / 12),
+        duration
+      };
+    }
+
+    function buildSongPlan() {
+      const syllables = parseSongLyrics(els.lyricsText.value);
+      const notes = parseMelody(els.melodyText.value);
+      const valid = syllables.length > 0 && syllables.length === notes.length;
+      return {
+        syllables,
+        notes,
+        valid,
+        events: valid ? syllables.map((syllable, index) => ({ ...syllable, note: notes[index] })) : []
+      };
+    }
+
+    function renderSongPlan(plan = buildSongPlan()) {
+      els.singSequence.innerHTML = "";
+      const length = Math.max(plan.syllables.length, plan.notes.length);
+      for (let index = 0; index < length; index++) {
+        const syllable = plan.syllables[index];
+        const note = plan.notes[index];
+        const step = document.createElement("div");
+        step.className = "seq-chip song-step";
+        step.dataset.seqIndex = index;
+        const noteLabel = document.createElement("span");
+        noteLabel.className = "song-note";
+        noteLabel.textContent = note?.token || "--";
+        const lyricLabel = document.createElement("span");
+        lyricLabel.className = "song-lyric";
+        lyricLabel.textContent = syllable?.lyric || "--";
+        const unitLabel = document.createElement("span");
+        unitLabel.className = "song-units";
+        unitLabel.textContent = syllable?.units.join(" + ") || "";
+        step.append(noteLabel, lyricLabel, unitLabel);
+        els.singSequence.appendChild(step);
+      }
+
+      els.songAlignment.classList.toggle("invalid", !plan.valid);
+      els.songAlignment.textContent = plan.valid
+        ? `${plan.syllables.length} syllables / ${plan.notes.length} notes / ready`
+        : `${plan.syllables.length} syllables / ${plan.notes.length} notes / counts must match`;
+      els.singButton.disabled = !plan.valid;
+    }
+
+    function scheduleSungUnit(unit, note, startTime, duration, reference) {
+      const record = bank[unit];
+      if (!record?.buffer) {
+        scheduleBeep(startTime, Math.min(0.18, duration), note.frequency);
+        return;
+      }
+
+      const timeCompression = record.buffer.duration / duration;
+      const melodyPitch = note.frequency / reference;
+      scheduleTimeStretchedBuffer(record.buffer, startTime, timeCompression, melodyPitch);
+    }
+
+    async function sing() {
+      await ensureAudioContext();
+      stopEverySound();
+      const plan = buildSongPlan();
+      renderSongPlan(plan);
+      updateMissingDisplays();
+      if (!plan.valid) return;
+      const reference = Number(els.referenceFreq.value);
+      const speed = Number(els.singSpeed.value);
+      let cursor = audioCtx.currentTime + 0.08;
+      plan.events.forEach(({ units, note }, index) => {
+        const duration = note.duration / speed;
+        const unitDuration = duration / units.length;
+        units.forEach((unit, unitIndex) => {
+          scheduleSungUnit(unit, note, cursor + unitIndex * unitDuration, unitDuration, reference);
+        });
+        scheduleHighlight(els.singSequence, index, cursor, duration);
+        cursor += duration;
+      });
+    }
+
+    els.singButton.addEventListener("click", () => sing().catch(console.error));
+    els.stopSingButton.addEventListener("click", stopEverySound);
+    [els.lyricsText, els.melodyText].forEach((input) => {
+      input.addEventListener("input", () => {
+        updateMissingDisplays();
+        renderSongPlan();
+      });
+    });
+    document.querySelectorAll("[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const preset = PRESETS[button.dataset.preset];
+        els.lyricsText.value = preset.lyrics;
+        els.melodyText.value = preset.melody;
+        updateMissingDisplays();
+        renderSongPlan();
+      });
+    });
+
+    renderGrid();
+    renderSequence(els.speechSequence, speechPlaybackPlan(els.speechText.value).map(({ unit }) => unit), true);
+    renderSongPlan();
+    updateSliderLabels();
+    updateMissingDisplays();
+    loadBank().catch((error) => {
+      els.recordStatus.textContent = "Could not open the local voice vault, but the app can still run.";
+      console.error(error);
+    });
+  </script>
+</body>
+</html>
