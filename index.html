@@ -117,6 +117,35 @@
       align-items: center;
     }
 
+    .import-picker {
+      position: relative;
+    }
+
+    .import-menu {
+      position: absolute;
+      top: calc(100% + 0.45rem);
+      right: 0;
+      z-index: 20;
+      display: grid;
+      min-width: 150px;
+      padding: 0.35rem;
+      gap: 0.3rem;
+      border: 1px solid rgba(48, 28, 14, 0.3);
+      background: #f3e6ca;
+      box-shadow: 0 12px 26px rgba(48, 28, 14, 0.24);
+    }
+
+    .import-menu[hidden] {
+      display: none;
+    }
+
+    .import-menu button {
+      width: 100%;
+      min-height: 36px;
+      text-align: left;
+      box-shadow: none;
+    }
+
     .toolbar {
       margin: 1rem 0;
       justify-content: space-between;
@@ -414,7 +443,13 @@
         <div class="button-row">
           <span class="progress" id="progress">0 / 41 captured</span>
           <button id="exportBank" type="button">Export voice bank</button>
-          <button id="importBank" type="button">Import voice bank</button>
+          <div class="import-picker" id="importPicker">
+            <button id="importBank" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="importMenu">Import voice bank</button>
+            <div class="import-menu" id="importMenu" role="menu" hidden>
+              <button id="importJoosun" type="button" role="menuitem">Joosun</button>
+              <button id="importFiles" type="button" role="menuitem">Files</button>
+            </div>
+          </div>
           <input id="importFile" type="file" accept="application/json,.json" hidden>
         </div>
       </div>
@@ -541,7 +576,11 @@ E4:0.2 D4:0.4 D4:0.4 E4:0.4 D4:0.4 C4:0.8</textarea>
       recordStatus: document.getElementById("recordStatus"),
       progress: document.getElementById("progress"),
       exportBank: document.getElementById("exportBank"),
+      importPicker: document.getElementById("importPicker"),
       importBank: document.getElementById("importBank"),
+      importMenu: document.getElementById("importMenu"),
+      importJoosun: document.getElementById("importJoosun"),
+      importFiles: document.getElementById("importFiles"),
       importFile: document.getElementById("importFile"),
       speechText: document.getElementById("speechText"),
       speakButton: document.getElementById("speakButton"),
@@ -741,7 +780,48 @@ E4:0.2 D4:0.4 D4:0.4 E4:0.4 D4:0.4 C4:0.8</textarea>
       URL.revokeObjectURL(url);
     });
 
-    els.importBank.addEventListener("click", () => els.importFile.click());
+    function setImportMenu(open) {
+      els.importMenu.hidden = !open;
+      els.importBank.setAttribute("aria-expanded", String(open));
+      if (open) els.importJoosun.focus();
+    }
+
+    els.importBank.addEventListener("click", () => {
+      setImportMenu(els.importMenu.hidden);
+    });
+
+    els.importJoosun.addEventListener("click", async () => {
+      setImportMenu(false);
+      els.recordStatus.textContent = "Loading Joosun voice bank...";
+      try {
+        const response = await fetch("./artisanal-voice-bank4grea.json", { cache: "no-store" });
+        if (!response.ok) throw new Error(`Joosun voice bank request failed: ${response.status}`);
+        const parsed = await response.json();
+        await importUnits(parsed.units || {});
+        await persistBank();
+        els.recordStatus.textContent = "Joosun voice bank is loaded and ready.";
+      } catch (error) {
+        els.recordStatus.textContent = "Could not load Joosun. Run this page from localhost, or choose Files.";
+        console.error(error);
+      }
+    });
+
+    els.importFiles.addEventListener("click", () => {
+      setImportMenu(false);
+      els.importFile.click();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!els.importPicker.contains(event.target)) setImportMenu(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !els.importMenu.hidden) {
+        setImportMenu(false);
+        els.importBank.focus();
+      }
+    });
+
     els.importFile.addEventListener("change", async () => {
       const file = els.importFile.files[0];
       if (!file) return;
